@@ -711,25 +711,6 @@ process_internal_proxy_config (MbimProxy   *self,
 /*****************************************************************************/
 /* Subscriber list */
 
-static MbimEventEntry **
-standard_service_subscribe_list_new (void)
-{
-    guint32  i, service;
-    MbimEventEntry **out;
-
-
-    out = g_new0 (MbimEventEntry *, MBIM_SERVICE_MS_FIRMWARE_ID);
-
-    for (service = MBIM_SERVICE_BASIC_CONNECT, i = 0;
-         service < MBIM_SERVICE_MS_FIRMWARE_ID;
-         service++, i++) {
-         out[i] = g_new0 (MbimEventEntry, 1);
-         memcpy (&out[i]->device_service_id, mbim_uuid_from_service (service), sizeof (MbimUuid));
-    }
-
-    return out;
-}
-
 static void
 track_service_subscribe_list (Client *client,
                               MbimMessage *message)
@@ -739,7 +720,7 @@ track_service_subscribe_list (Client *client,
     if (client->mbim_event_entry_array)
         mbim_event_entry_array_free (client->mbim_event_entry_array);
 
-    client->mbim_event_entry_array = mbim_proxy_helper_service_subscribe_request_parse (message);
+    client->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_request_parse (message);
 }
 
 static MbimEventEntry **
@@ -753,7 +734,7 @@ merge_client_service_subscribe_lists (MbimProxy *self,
     MbimEventEntry **out;
     Client *client;
 
-    out = standard_service_subscribe_list_new ();
+    out = _mbim_proxy_helper_service_subscribe_standard_list_new ();
 
     for (l = self->priv->clients; l; l = g_list_next (l)) {
         client = l->data;
