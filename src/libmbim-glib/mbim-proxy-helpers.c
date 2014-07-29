@@ -101,8 +101,7 @@ _mbim_proxy_helper_service_subscribe_list_merge (MbimEventEntry **original,
 
         /* look for matching uuid */
         for (out_idx = 0; original[out_idx]; out_idx++) {
-            if (mbim_uuid_cmp (&merge[i]->device_service_id,
-                               &original[out_idx]->device_service_id)) {
+            if (mbim_uuid_cmp (&merge[i]->device_service_id, &original[out_idx]->device_service_id)) {
                 entry = original[out_idx];
                 break;
             }
@@ -114,7 +113,7 @@ _mbim_proxy_helper_service_subscribe_list_merge (MbimEventEntry **original,
             original[out_idx] = g_memdup (merge[i], sizeof (MbimEventEntry));
             if (merge[i]->cids_count)
                 original[out_idx]->cids = g_memdup (merge[i]->cids,
-                                                   sizeof (guint32) * merge[i]->cids_count);
+                                                    sizeof (guint32) * merge[i]->cids_count);
             else
                 original[out_idx]->cids = NULL;
 
