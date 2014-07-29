@@ -727,65 +727,19 @@ static MbimEventEntry **
 merge_client_service_subscribe_lists (MbimProxy *self,
                                       guint32   *events_count)
 {
-    guint32 i, ii;
-    guint32 out_idx, out_cid_idx;
     GList *l;
-    MbimEventEntry *entry;
     MbimEventEntry **out;
-    Client *client;
 
     out = _mbim_proxy_helper_service_subscribe_standard_list_new ();
 
     for (l = self->priv->clients; l; l = g_list_next (l)) {
+        Client *client;
+
         client = l->data;
         if (!client->mbim_event_entry_array)
             continue;
 
-        for (i = 0; client->mbim_event_entry_array[i]; i++) {
-            entry = NULL;
-
-            /* look for matching uuid */
-            for (out_idx = 0; out[out_idx]; out_idx++) {
-                if (mbim_uuid_cmp (&client->mbim_event_entry_array[i]->device_service_id,
-                                   &out[out_idx]->device_service_id)) {
-                    entry = out[out_idx];
-                    break;
-                }
-            }
-
-            if (!entry) {
-                /* matching uuid not found in merge array, add it */
-                out = g_realloc (out, sizeof (*out) * (out_idx + 2));
-                out[out_idx] = g_memdup (client->mbim_event_entry_array[i], sizeof (MbimEventEntry));
-                if (client->mbim_event_entry_array[i]->cids_count)
-                    out[out_idx]->cids = g_memdup (client->mbim_event_entry_array[i]->cids,
-                                                   sizeof (guint32) * client->mbim_event_entry_array[i]->cids_count);
-                else
-                    out[out_idx]->cids = NULL;
-
-                out[++out_idx] = NULL;
-                *events_count = out_idx;
-            } else {
-                /* matching uuid found, add cids */
-                if (!entry->cids_count)
-                    /* all cids already enabled for uuid */
-                    continue;
-
-                for (ii = 0; ii < client->mbim_event_entry_array[i]->cids_count; ii++) {
-                    for (out_cid_idx = 0; out_cid_idx < entry->cids_count; out_cid_idx++) {
-                        if (client->mbim_event_entry_array[i]->cids[ii] == entry->cids[out_cid_idx]) {
-                            break;
-                        }
-                    }
-
-                    if (out_cid_idx == entry->cids_count) {
-                        /* cid not found in merge array, add it */
-                        entry->cids = g_realloc (entry->cids, sizeof (guint32) * (entry->cids_count++));
-                        entry->cids[out_cid_idx] = client->mbim_event_entry_array[i]->cids[ii];
-                    }
-                }
-            }
-        }
+        out = _mbim_proxy_helper_service_subscribe_list_merge (out, client->mbim_event_entry_array, events_count);
     }
 
     return out;

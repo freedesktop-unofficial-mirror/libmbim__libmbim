@@ -85,3 +85,62 @@ _mbim_proxy_helper_service_subscribe_request_parse (MbimMessage *message)
 
     return array;
 }
+
+MbimEventEntry **
+_mbim_proxy_helper_service_subscribe_list_merge (MbimEventEntry **original,
+                                                 MbimEventEntry **merge,
+                                                 guint           *events_count)
+{
+
+    guint32 i, ii;
+    guint32 out_idx, out_cid_idx;
+    MbimEventEntry *entry;
+
+    for (i = 0; merge[i]; i++) {
+        entry = NULL;
+
+        /* look for matching uuid */
+        for (out_idx = 0; original[out_idx]; out_idx++) {
+            if (mbim_uuid_cmp (&merge[i]->device_service_id,
+                               &original[out_idx]->device_service_id)) {
+                entry = original[out_idx];
+                break;
+            }
+        }
+
+        if (!entry) {
+            /* matching uuid not found in merge array, add it */
+            original = g_realloc (original, sizeof (*original) * (out_idx + 2));
+            original[out_idx] = g_memdup (merge[i], sizeof (MbimEventEntry));
+            if (merge[i]->cids_count)
+                original[out_idx]->cids = g_memdup (merge[i]->cids,
+                                                   sizeof (guint32) * merge[i]->cids_count);
+            else
+                original[out_idx]->cids = NULL;
+
+            original[++out_idx] = NULL;
+            *events_count = out_idx;
+        } else {
+            /* matching uuid found, add cids */
+            if (!entry->cids_count)
+                /* all cids already enabled for uuid */
+                continue;
+
+            for (ii = 0; ii < merge[i]->cids_count; ii++) {
+                for (out_cid_idx = 0; out_cid_idx < entry->cids_count; out_cid_idx++) {
+                    if (merge[i]->cids[ii] == entry->cids[out_cid_idx]) {
+                        break;
+                    }
+                }
+
+                if (out_cid_idx == entry->cids_count) {
+                    /* cid not found in merge array, add it */
+                    entry->cids = g_realloc (entry->cids, sizeof (guint32) * (entry->cids_count++));
+                    entry->cids[out_cid_idx] = merge[i]->cids[ii];
+                }
+            }
+        }
+    }
+
+    return original;
+}

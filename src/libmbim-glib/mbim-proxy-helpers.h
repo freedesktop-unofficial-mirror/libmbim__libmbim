@@ -38,7 +38,10 @@
 G_BEGIN_DECLS
 
 MbimEventEntry **_mbim_proxy_helper_service_subscribe_standard_list_new (void);
-MbimEventEntry **_mbim_proxy_helper_service_subscribe_request_parse     (MbimMessage *message);
+MbimEventEntry **_mbim_proxy_helper_service_subscribe_request_parse     (MbimMessage     *message);
+MbimEventEntry **_mbim_proxy_helper_service_subscribe_list_merge        (MbimEventEntry **original,
+                                                                         MbimEventEntry **merge,
+                                                                         guint           *events_count);
 
 G_END_DECLS
 
