@@ -53,7 +53,6 @@ mbim_proxy_helper_service_subscribe_request_parse (MbimMessage *message)
             event->cids_count = _mbim_message_read_guint32 (message, array_offset);
             array_offset += 4;
 
-#if 1
             if (event->cids_count)
                 event->cids = _mbim_message_read_guint32_array (message, event->cids_count, array_offset);
             else
@@ -61,16 +60,6 @@ mbim_proxy_helper_service_subscribe_request_parse (MbimMessage *message)
 
             array[i] = event;
             offset += 8;
-#else
-            /* NOTE to Greg: shouldn't this be like this? */
-            if (event->cids_count) {
-                event->cids = _mbim_message_read_guint32_array (message, event->cids_count, array_offset);
-                offset += (4 * event->cids_count);
-            } else
-                event->cids = NULL;
-
-            array[i] = event;
-#endif
         }
 
         array[element_count] = NULL;
